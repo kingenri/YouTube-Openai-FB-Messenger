@@ -1,36 +1,48 @@
 require('dotenv').config();
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require('openai');
 
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY // This is also the default, can be omitted
 });
-const openai = new OpenAIApi(configuration);
 
 const chatCompletion = async (prompt) => {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { "role": "system", "content": "You are a helpful assistant." },
+        { "role": "user", "content": prompt }
+      ]
+    });
 
-    try {
-        const response = await openai.createChatCompletion(
-            {
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    { "role": "system", "content": "You are a helpful assistant." },
-                    { "role": "user", "content": prompt }
-                ]
-            }
-        );
-
-        let content = response.data.choices[0].message.content;
-
-        return {
-            status: 1,
-            response: content
-        };
-    } catch (error) {
-        return {
-            status: 0,
-            response: ''
-        };
+    if (response && response.choices && response.choices[0] && response.choices[0].message) {
+      let content = response.choices[0].message.content;
+      console.log('Chat GPT response status:', response.status); // Displaying the response status
+      return {
+        status: 1,
+        response: content
+      };
+    } else {
+      console.error('Unexpected response structure:', response);
+      return {
+        status: 0,
+        response: ''
+      };
     }
+  } catch (error) {
+    if (error instanceof OpenAI.APIError) {
+      console.error('Chat GPT response status:', error.status); // Displaying the response status
+      console.error(error.message);
+      console.error(error.code);
+      console.error(error.type);
+    } else {
+      console.error('Error in chatCompletion:', error);
+    }
+    return {
+      status: 0,
+      response: ''
+    };
+  }
 };
 
 module.exports = {
