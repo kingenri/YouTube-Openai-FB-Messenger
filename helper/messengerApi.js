@@ -16,7 +16,7 @@ const sendMessage = async(senderId, message) => {
         message: JSON.stringify({'text': message})
       }
     };
-    
+
     let response = await axios.request(options);
 
     if (response['status'] == 200 && response['statusText'] === 'OK') {
